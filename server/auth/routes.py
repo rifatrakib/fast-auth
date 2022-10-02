@@ -1,2 +1,8 @@
-# This script contains all the endpoints which will be used
-# for everything authentication and authorization
+from fastapi import APIRouter
+
+router = APIRouter()
+
+
+@router.post("/login")
+async def login_user():
+    pass
