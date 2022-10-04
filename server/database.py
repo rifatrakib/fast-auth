@@ -1,11 +1,15 @@
-import databases
-from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
-from .utils import get_url
+from server.utils import get_url
 
-SQLALCHEMY_DATABASE_URL = get_url()
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 
-SessionLocal = databases.Database(SQLALCHEMY_DATABASE_URL)
+async def get_database_session():
+    url = get_url()
+    engine = create_async_engine(url, connect_args={"check_same_thread": False})
+    SessionLocal = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+    return SessionLocal
+
+
 Base = declarative_base()

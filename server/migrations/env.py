@@ -10,7 +10,7 @@ from sqlalchemy import engine_from_config, pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from server.database import Base
+from server.auth.models import User
 from server.utils import get_url
 
 parent = Path(__file__).resolve().parents[1]
@@ -30,12 +30,18 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = Base.metadata
+target_metadata = [User.metadata]
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+section = config.config_ini_section
+config.set_section_option(section, "DB_USERNAME", os.environ.get("DB_USERNAME"))
+config.set_section_option(section, "DB_PASSWORD", os.environ.get("DB_PASSWORD"))
+config.set_section_option(section, "DB_HOST", os.environ.get("DB_HOST"))
+config.set_section_option(section, "DB_PORT", os.environ.get("DB_PORT"))
+config.set_section_option(section, "DATABASE_NAME", os.environ.get("DATABASE_NAME"))
 
 
 def run_migrations_offline() -> None:

@@ -33,6 +33,7 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
+    id: int
     hashed_password: str
 
 
