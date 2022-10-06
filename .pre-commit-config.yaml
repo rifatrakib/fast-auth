@@ -9,6 +9,7 @@ repos:
     rev: v1.3.0
     hooks:
     - id: detect-secrets
+      exclude: migrations/
   - repo: https://github.com/PyCQA/docformatter
     rev: v1.5.0
     hooks:
