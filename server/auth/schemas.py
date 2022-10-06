@@ -21,24 +21,27 @@ class UserBase(BaseModel):
     phone_number: Union[str, None] = None
     gender: Union[Gender, None] = None
     birthday: Union[datetime, None] = None
+    is_active: bool
 
     @validator("phone_number")
     def phone_number_validation(cls, value):
-        regex = r"^(\+)[1-9][0-9\-\(\)\.]{9,15}$"
+        regex = r"^([0-9\(\)\/\+ \-]*)$"
         pat = re.compile(regex)
-        if value and not re.search(pat, value, re.I):
+        if value and not re.search(pat, value):
             raise ValueError("phone number invalid")
 
         return value
 
 
 class UserCreate(UserBase):
-    id: int
     hashed_password: str
 
 
 class User(UserBase):
-    is_active: bool
+    id: int
+
+    class Config:
+        orm_mode = True
 
 
 class Password(BaseModel):
