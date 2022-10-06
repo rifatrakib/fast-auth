@@ -5,9 +5,9 @@ from sqlalchemy.orm import sessionmaker
 from server.utils import get_url
 
 
-async def get_database_session():
+def get_database_session():
     url = get_url()
-    engine = create_async_engine(url, connect_args={"check_same_thread": False})
+    engine = create_async_engine(url)
     SessionLocal = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
     return SessionLocal
 
