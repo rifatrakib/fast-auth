@@ -17,9 +17,11 @@ class User(Base):
     middle_name = Column(String, default=None)
     last_name = Column(String, default=None)
     email_address = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
     phone_number = Column(String, unique=True, index=True)
-    gender = Column(Boolean, default=None)
-    birthday = Column(DateTime, default=None)
+    gender = Column(String, default=None)
+    birthday = Column(DateTime(timezone=True), default=None)
+    is_active = Column(Boolean, default=True)
 
     @validates("email_address")
     def email_validator(self, key, address):
@@ -33,7 +35,7 @@ class User(Base):
 
     @validates("phone_number")
     def phone_number_validator(self, key, number):
-        regex = r"^(\+)[1-9][0-9\-\(\)\.]{9,15}$"
+        regex = r"^([0-9\(\)\/\+ \-]*)$"
         pat = re.compile(regex)
         if number and not re.search(pat, number, re.I):
             raise ValueError(f"phone number invalid. provide a valid {key}")
