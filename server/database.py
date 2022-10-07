@@ -12,4 +12,12 @@ def get_database_session():
     return SessionLocal
 
 
+async def get_session():
+    try:
+        session: AsyncSession = get_database_session()()
+        yield session
+    finally:
+        await session.close()
+
+
 Base = declarative_base()
