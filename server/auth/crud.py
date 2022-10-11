@@ -1,4 +1,4 @@
-from sqlalchemy import insert, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from . import models, schemas
@@ -7,10 +7,9 @@ from . import models, schemas
 async def create_new_user(session: AsyncSession, user: schemas.UserCreate):
     data = user.dict()
     data["gender"] = data["gender"].value
-    query = insert(models.User).values(data).returning(models.User.id)
-    user_id = await session.execute(query)
+    user_data = models.User(**data)
+    session.add(user_data)
     await session.commit()
-    user_data = {**data, "id": user_id.scalars().first()}
     return user_data
 
 
