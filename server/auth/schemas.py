@@ -33,6 +33,10 @@ class UserBase(BaseModel):
         return value
 
 
+class UserInRequest(UserBase):
+    password: str
+
+
 class UserCreate(UserBase):
     hashed_password: str
 
@@ -49,7 +53,7 @@ class Password(BaseModel):
 
     @validator("password")
     def password_validator(cls, value):
-        regex = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])([A-Za-z\d@$!%*#?&]{6,32}$"
+        regex = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])([A-Za-z\d@$!%*#?&]){6,32}$"
         pat = re.compile(regex)
         invalid_message = {
             "message": "password must have the following fields",
