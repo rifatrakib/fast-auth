@@ -4,13 +4,14 @@ from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import read_config
+from ..database import get_session
 from .schemas import Payload, User
 from .utils import get_user
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login/")
 
 
-async def get_current_user(session: AsyncSession = Depends(), token: str = Depends(oauth2_scheme)):
+async def get_current_user(session: AsyncSession = Depends(get_session), token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
