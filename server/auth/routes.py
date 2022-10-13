@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,23 +9,30 @@ from ..database import get_session
 from .crud import create_new_user, get_user_by_id
 from .dependencies import get_current_user
 from .schemas import AuthToken, Password, User, UserCreate, UserInRequest
+from .tasks import send_email
 from .utils import authenticate_user, create_access_token, get_password_hash
 
 router = APIRouter(prefix="/auth")
 
 
 @router.post("/register/", response_model=User)
-async def register_new_user(user: UserInRequest, session: AsyncSession = Depends(get_session)):
+async def register_new_user(
+    user: UserInRequest,
+    task: BackgroundTasks,
+    session: AsyncSession = Depends(get_session),
+):
     validated_password = Password(password=user.password)
     hashed_password = get_password_hash(validated_password.password)
     user_data = UserCreate(**user.dict(), hashed_password=hashed_password)
     created_user = await create_new_user(session, user_data)
+    task.add_task(send_email, user.email_address)
     return created_user
 
 
 @router.post("/login/", response_model=AuthToken)
 async def login_for_access_token(
-    session: AsyncSession = Depends(get_session), form_data: OAuth2PasswordRequestForm = Depends()
+    session: AsyncSession = Depends(get_session),
+    form_data: OAuth2PasswordRequestForm = Depends(),
 ):
     user = await authenticate_user(session, form_data.username, form_data.password)
     if not user:
@@ -35,7 +42,9 @@ async def login_for_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=read_config("access_token_expire_minutes"))
-    access_token = create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
     return {"access_token": access_token, "token_type": "bearer"}
 
 
