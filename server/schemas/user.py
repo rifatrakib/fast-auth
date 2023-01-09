@@ -5,6 +5,7 @@ from typing import Union
 from pydantic import EmailStr, Field
 
 from server.schemas.base import SchemaConfigBase
+from server.utilities.converters import optional
 
 
 class Gender(Enum):
@@ -34,6 +35,11 @@ class UserCreate(UserBase):
     hashed_password: str = Field(...)
 
 
+@optional
+class UserUpdateRequest(UserCreateRequest):
+    pass
+
+
 class User(UserBase):
     id: int = Field(...)
 
@@ -45,8 +51,8 @@ class AccountWithToken(SchemaConfigBase):
     is_verified: bool
     is_active: bool
     is_logged_in: bool
-    created_at: datetime.datetime
-    updated_at: datetime.datetime | None
+    created_at: datetime
+    updated_at: Union[datetime, None]
 
 
 class AccountInResponse(SchemaConfigBase):
