@@ -16,6 +16,9 @@ async def get_session():
     try:
         session: AsyncSession = get_database_session()()
         yield session
+    except Exception as e:
+        print(e)
+        await session.rollback()
     finally:
         await session.close()
 
