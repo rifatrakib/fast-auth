@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "fast-auth"
+version = "0.1.0"
+description = "simple OAuth through auth server microservice built with FastAPI"
+authors = ["rifatrakib <Rakib.1508@outlook.com>"]
+readme = "README.md"
+packages = [{include = "fast_auth"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+fastapi = {extras = ["all"], version = "^0.89.1"}
+sqlalchemy = {extras = ["asyncio"], version = "^1.4.46"}
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+asyncpg = "^0.27.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^22.12.0"
+flake8 = "^6.0.0"
+mypy = "^0.991"
+isort = "^5.11.4"
+pre-commit = "^2.21.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
