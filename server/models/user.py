@@ -14,7 +14,7 @@ class Account(Base):
     email = Column(String(256), unique=True, index=True, nullable=False)
     hashed_password = Column(String(1024), nullable=True)
     hash_salt = Column(String(1024), nullable=True)
-    phone_number = Column(String(16), unique=True, index=True)
+    phone_number = Column(String(16), unique=True, index=True, nullable=True)
     is_active = Column(Boolean, nullable=False, default=False, index=True)
     is_verified = Column(Boolean, nullable=False, default=False, index=True)
     is_logged_in = Column(Boolean, nullable=False, default=False, index=True)
@@ -42,11 +42,12 @@ class User(Base):
         ondelete="CASCADE",
         index=True,
         unique=True,
+        nullable=False,
     )
     first_name = Column(String(64), nullable=False)
-    middle_name = Column(String(256), default=None)
+    middle_name = Column(String(256), default=None, nullable=True)
     last_name = Column(String(64), nullable=False)
-    gender = Column(String(1), default=None)
-    birthday = Column(DateTime(timezone=True), default=None)
+    gender = Column(String(1), default=None, nullable=True)
+    birthday = Column(DateTime(timezone=True), default=None, nullable=True)
 
     account = relationship("Account", back_populates="user")
