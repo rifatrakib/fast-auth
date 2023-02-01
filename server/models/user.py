@@ -36,10 +36,9 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(
+    account_id = Column(
         Integer,
         ForeignKey("accounts.id"),
-        ondelete="CASCADE",
         index=True,
         unique=True,
         nullable=False,
@@ -50,4 +49,4 @@ class User(Base):
     gender = Column(String(1), default=None, nullable=True)
     birthday = Column(DateTime(timezone=True), default=None, nullable=True)
 
-    account = relationship("Account", back_populates="user")
+    account = relationship("Account", back_populates="user", cascade="all, delete-orphan")
