@@ -26,4 +26,4 @@ def get_settings() -> SettingsFactory:
     return SettingsFactory(mode=config("MODE", default="development", cast=str))()
 
 
-settings: SettingsFactory = get_settings()
+settings: BaseConfig = get_settings()
