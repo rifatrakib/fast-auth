@@ -3,9 +3,9 @@ from typing import Sequence
 from sqlalchemy import select
 
 from server.models.user import Account
-from server.schemas.user import SignupRequestSchema
+from server.schemas.user import LoginRequestSchema, SignupRequestSchema
 from server.security.password import pwd_generator
-from server.services.exceptions import EntityDoesNotExist
+from server.services.exceptions import EntityDoesNotExist, PasswordDoesNotMatch
 from server.sql.base import SQLBase
 
 
@@ -54,3 +54,20 @@ class AccountCRUD(SQLBase):
             raise EntityDoesNotExist(f"account with email `{email}` does not exist!")
 
         return query.scalar()  # type: ignore
+
+    async def authenticate_user(self, data: LoginRequestSchema) -> Account:
+        stmt = select(Account).where(Account.username == data.username)
+        query = await self.session.execute(statement=stmt)
+        account = query.scalar()
+
+        if not account:
+            raise EntityDoesNotExist("wrong username or password!")
+
+        if not pwd_generator.verify_password(
+            hash_salt=account.hash_salt,
+            password=data.password,
+            hashed_password=account.hashed_password,
+        ):
+            raise PasswordDoesNotMatch("wrong username or password!")
+
+        return account  # type: ignore
