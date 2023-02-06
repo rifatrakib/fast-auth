@@ -5,7 +5,11 @@ from sqlalchemy import select
 from server.models.user import Account
 from server.schemas.user import LoginRequestSchema, SignupRequestSchema
 from server.security.password import pwd_generator
-from server.services.exceptions import EntityDoesNotExist, PasswordDoesNotMatch
+from server.services.exceptions import (
+    EntityAlreadyExists,
+    EntityDoesNotExist,
+    PasswordDoesNotMatch,
+)
 from server.sql.base import SQLBase
 
 
@@ -71,3 +75,30 @@ class AccountCRUD(SQLBase):
             raise PasswordDoesNotMatch("wrong username or password!")
 
         return account  # type: ignore
+
+    async def is_username_available(self, username: str) -> bool:
+        stmt = select(Account.username).select_from(Account).where(Account.username == username)
+        query = await self.session.execute(statement=stmt)
+        db_username = query.scalar()
+
+        if db_username:
+            raise EntityAlreadyExists(f"the username `{username}` is already taken!")  # type: ignore
+        return True
+
+    async def is_email_available(self, email: str) -> bool:
+        stmt = select(Account.email).select_from(Account).where(Account.email == email)
+        query = await self.session.execute(statement=stmt)
+        db_email = query.scalar()
+
+        if db_email:
+            raise EntityAlreadyExists(f"the username `{email}` is already taken!")  # type: ignore
+        return True
+
+    async def is_phone_number_available(self, phone_number: str) -> bool:
+        stmt = select(Account.phone_number).select_from(Account).where(Account.phone_number == phone_number)
+        query = await self.session.execute(statement=stmt)
+        db_phone_number = query.scalar()
+
+        if db_phone_number:
+            raise EntityAlreadyExists(f"the username `{phone_number}` is already taken!")  # type: ignore
+        return True
