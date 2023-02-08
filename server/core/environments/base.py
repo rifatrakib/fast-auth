@@ -22,9 +22,9 @@ class BaseConfig(BaseSettings):
     JWT_SUBJECT: str
     JWT_ALGORITHM: str
     JWT_TOKEN_PREFIX: str
-    JWT_MIN: str
-    JWT_HOUR: str
-    JWT_DAY: str
+    JWT_MIN: int
+    JWT_HOUR: int
+    JWT_DAY: int
 
     class Config:
         env_file = ".env"
