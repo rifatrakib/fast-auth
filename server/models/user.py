@@ -49,4 +49,9 @@ class User(Base):
     gender = Column(String(1), default=None, nullable=True)
     birthday = Column(DateTime(timezone=True), default=None, nullable=True)
 
-    account = relationship("Account", back_populates="user", cascade="all, delete-orphan")
+    account = relationship(
+        "Account",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        single_parent=True,
+    )

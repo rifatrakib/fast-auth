@@ -6,18 +6,16 @@ from pydantic import EmailStr
 from server.schemas.base import BaseSchemaAPI
 
 
-class AccountPostRequestSchema(BaseSchemaAPI):
+class AccountToken(BaseSchemaAPI):
+    token: str
     username: str
-    password: str
-
-
-class SignupRequestSchema(AccountPostRequestSchema):
     email: EmailStr
     phone_number: Union[str, None] = None
-
-
-class LoginRequestSchema(AccountPostRequestSchema):
-    pass
+    is_verified: bool
+    is_active: bool
+    is_logged_in: bool
+    created_at: datetime
+    updated_at: Union[datetime, None] = None
 
 
 class JWTData(BaseSchemaAPI):
