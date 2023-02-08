@@ -1,14 +1,14 @@
-"""auth-v1.
+"""account-and-user.
 
-Revision ID: 76eab936d3f6
+Revision ID: b0423db9f1e9
 Revises:
-Create Date: 2023-01-31 17:40:05.805731
+Create Date: 2023-02-08 09:19:21.479528
 """
 import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "76eab936d3f6"  # pragma: allowlist secret
+revision = "b0423db9f1e9"  # pragma: allowlist secret
 down_revision = None
 branch_labels = None
 depends_on = None
