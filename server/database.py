@@ -6,11 +6,11 @@ from server.core.config import settings
 
 
 def get_database_url():
-    username = settings.DB_USERNAME
-    password = settings.DB_PASSWORD
-    host = settings.DB_HOST
-    port = settings.DB_PORT
-    database_name = settings.DATABASE_NAME
+    username = settings.RDS_USER
+    password = settings.RDS_PASS
+    host = settings.RDS_HOST
+    port = settings.RDS_PORT
+    database_name = settings.RDS_NAME
     url = f"postgresql+asyncpg://{username}:{password}@{host}:{port}/{database_name}"
     return url
 
