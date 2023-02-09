@@ -6,7 +6,7 @@ from pydantic import ValidationError
 
 from server.core.config import settings
 from server.models.user import Account
-from server.schemas.user import JWTData, JWToken
+from server.schemas.token import JWTData, JWToken
 from server.services.exceptions import EntityDoesNotExist
 
 
@@ -32,7 +32,7 @@ class JWTGenerator:
             raise EntityDoesNotExist("cannot generate JWT for without Account entity!")
 
         return self._generate_jwt(
-            data=JWTData(id=account.id, username=account.username, email=account.email),
+            data=JWTData(id=account.id, username=account.username, email=account.email).dict(),
             expires_delta=timedelta(minutes=settings.JWT_MIN),
         )
 
