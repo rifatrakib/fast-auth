@@ -3,7 +3,7 @@ from typing import Sequence
 from sqlalchemy import select
 
 from server.models.user import Account
-from server.schemas.user import LoginRequestSchema, SignupRequestSchema
+from server.schemas.account import LoginRequestSchema, SignupRequestSchema
 from server.security.password import pwd_generator
 from server.services.exceptions import (
     EntityAlreadyExists,
@@ -15,7 +15,12 @@ from server.sql.base import SQLBase
 
 class AccountCRUD(SQLBase):
     async def create_account(self, data: SignupRequestSchema) -> Account:
-        new_account = Account(**data.dict(), is_logged_in=True)
+        new_account = Account(
+            username=data.username,
+            email=data.email,
+            phone_number=data.phone_number,
+            is_logged_in=True,
+        )
         new_account.hash_salt = pwd_generator.generate_salt
         new_account.hashed_password = pwd_generator.generate_hashed_password(
             hash_salt=new_account.hash_salt,
