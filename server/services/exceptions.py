@@ -9,3 +9,8 @@ class EntityAlreadyExists(Exception):
 class PasswordDoesNotMatch(Exception):
     """throw an exception when the account password does not match the
     entitiy's hashed password from the database."""
+
+
+class UserNotActive(Exception):
+    """throw an exception when the account has not been activated through
+    email."""
