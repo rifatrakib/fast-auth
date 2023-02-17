@@ -1,6 +1,6 @@
 from typing import Union
 
-from pydantic import BaseSettings, EmailStr
+from pydantic import BaseSettings, EmailStr, HttpUrl
 
 
 class BaseConfig(BaseSettings):
@@ -38,6 +38,10 @@ class BaseConfig(BaseSettings):
     MAIL_STARTTLS: bool
     MAIL_SSL_TLS: bool
     USE_CREDENTIALS: bool
+
+    # random generator config
+    RANDOM_BYTE_LENGTH: int
+    VERIFICATION_URL: HttpUrl
 
     class Config:
         env_file = ".env"
