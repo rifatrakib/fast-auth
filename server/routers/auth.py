@@ -1,11 +1,19 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends, status
+from fastapi.security import OAuth2PasswordRequestForm
 
-from server.schemas.account import SignupRequestSchema, SignupResponseSchema
-from server.schemas.token import AccountToken
+from server.schemas.account import (
+    AuthResponseSchema,
+    LoginRequestSchema,
+    SignupRequestSchema,
+)
 from server.security.dependencies import generate_crud_instance
 from server.security.token import jwt_generator
+from server.services.email import send_email
 from server.services.exceptions import EntityAlreadyExists
-from server.services.messages import http_exc_400_credentials_bad_signup_request
+from server.services.messages import (
+    http_exc_400_credentials_bad_signin_request,
+    http_exc_400_credentials_bad_signup_request,
+)
 from server.sql.user import AccountCRUD
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -15,10 +23,12 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
     "/signup",
     name="auth:signup",
     summary="Create new user",
-    response_model=SignupResponseSchema,
+    response_model=AuthResponseSchema,
+    status_code=status.HTTP_201_CREATED,
 )
 async def register_user(
     payload: SignupRequestSchema,
+    task: BackgroundTasks,
     account: AccountCRUD = Depends(generate_crud_instance(name=AccountCRUD)),
 ):
     try:
@@ -28,19 +38,29 @@ async def register_user(
         raise await http_exc_400_credentials_bad_signup_request()
 
     new_user = await account.create_account(data=payload)
+    task.add_task(send_email, email=new_user.email)
     access_token = jwt_generator.generate_access_token(account=new_user)
 
-    return SignupResponseSchema(
-        id=new_user.id,
-        authentication_token=AccountToken(
-            token=access_token,
-            username=new_user.username,
-            email=new_user.email,
-            phone_number=new_user.phone_number,
-            is_verified=new_user.is_verified,
-            is_active=new_user.is_active,
-            is_logged_in=new_user.is_logged_in,
-            created_at=new_user.created_at,
-            updated_at=new_user.updated_at,
-        ),
-    )
+    return AuthResponseSchema(token_type="Bearer", access_token=access_token)
+
+
+@router.post(
+    "/signin",
+    name="auth:signin",
+    summary="Authenticate user for token",
+    response_model=AuthResponseSchema,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def signin(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    account: AccountCRUD = Depends(generate_crud_instance(name=AccountCRUD)),
+):
+    try:
+        data = LoginRequestSchema(username=form_data.username, password=form_data.password)
+        user = await account.authenticate_user(data)
+    except Exception:
+        raise await http_exc_400_credentials_bad_signin_request()
+
+    access_token = jwt_generator.generate_access_token(account=user)
+
+    return AuthResponseSchema(token_type="Bearer", access_token=access_token)
