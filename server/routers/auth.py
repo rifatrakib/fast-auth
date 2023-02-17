@@ -9,10 +9,16 @@ from server.schemas.account import (
 from server.security.dependencies import generate_crud_instance
 from server.security.token import jwt_generator
 from server.services.email import send_email
-from server.services.exceptions import EntityAlreadyExists
+from server.services.exceptions import (
+    EntityAlreadyExists,
+    EntityDoesNotExist,
+    PasswordDoesNotMatch,
+    UserNotActive,
+)
 from server.services.messages import (
     http_exc_400_credentials_bad_signin_request,
     http_exc_400_credentials_bad_signup_request,
+    http_exc_400_inactive_user,
 )
 from server.sql.user import AccountCRUD
 
@@ -58,7 +64,11 @@ async def signin(
     try:
         data = LoginRequestSchema(username=form_data.username, password=form_data.password)
         user = await account.authenticate_user(data)
-    except Exception:
+    except EntityDoesNotExist:
+        raise await http_exc_400_credentials_bad_signin_request()
+    except UserNotActive:
+        raise await http_exc_400_inactive_user()
+    except PasswordDoesNotMatch:
         raise await http_exc_400_credentials_bad_signin_request()
 
     access_token = jwt_generator.generate_access_token(account=user)
