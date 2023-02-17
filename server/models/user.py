@@ -30,6 +30,7 @@ class Account(Base):
     )
 
     user = relationship("User", back_populates="account", uselist=False)
+    validator = relationship("AccountValidation", back_populates="account", uselist=False)
 
 
 class User(Base):
@@ -52,6 +53,32 @@ class User(Base):
     account = relationship(
         "Account",
         back_populates="user",
+        cascade="all, delete-orphan",
+        single_parent=True,
+    )
+
+
+class AccountValidation(Base):
+    __tablename__ = "account_validations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    account_id = Column(
+        Integer,
+        ForeignKey("accounts.id"),
+        index=True,
+        unique=True,
+        nullable=False,
+    )
+    validation_key = Column(String(64), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=functions.now(),
+    )
+
+    account = relationship(
+        "Account",
+        back_populates="validator",
         cascade="all, delete-orphan",
         single_parent=True,
     )
