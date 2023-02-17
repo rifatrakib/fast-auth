@@ -9,6 +9,7 @@ from server.services.exceptions import (
     EntityAlreadyExists,
     EntityDoesNotExist,
     PasswordDoesNotMatch,
+    UserNotActive,
 )
 from server.sql.base import SQLBase
 
@@ -19,7 +20,6 @@ class AccountCRUD(SQLBase):
             username=data.username,
             email=data.email,
             phone_number=data.phone_number,
-            is_logged_in=True,
         )
         new_account.hash_salt = pwd_generator.generate_salt
         new_account.hashed_password = pwd_generator.generate_hashed_password(
@@ -71,6 +71,9 @@ class AccountCRUD(SQLBase):
 
         if not account:
             raise EntityDoesNotExist("wrong username or password!")
+
+        if not account.is_active:
+            raise UserNotActive("account is not active! please activate through email.")
 
         if not pwd_generator.verify_password(
             hash_salt=account.hash_salt,
