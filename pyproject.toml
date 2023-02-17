@@ -17,6 +17,7 @@ python-decouple = "^3.7"
 inflection = "^0.5.1"
 alembic = "^1.9.2"
 argon2-cffi = "^21.3.0"
+fastapi-mail = "^1.2.5"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.12.0"
