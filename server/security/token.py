@@ -1,4 +1,6 @@
+import hashlib
 from datetime import datetime, timedelta
+from random import randbytes
 from typing import Dict, Union
 
 from jose import JWTError, jwt
@@ -59,6 +61,14 @@ class JWTGenerator:
         except ValidationError as validation_error:
             raise ValueError("invalid payload in JWT") from validation_error
         return jwt_data
+
+
+def generate_account_validation_token() -> str:
+    token = randbytes(settings.RANDOM_BYTE_LENGTH)
+    hashed_code = hashlib.sha256()
+    hashed_code.update(token)
+    verification_code = hashed_code.hexdigest()
+    return verification_code
 
 
 def get_jwt_generator() -> JWTGenerator:
