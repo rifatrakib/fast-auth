@@ -1,10 +1,12 @@
 from typing import Sequence
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
-from server.models.user import Account
+from server.models.user import Account, AccountValidation
 from server.schemas.account import LoginRequestSchema, SignupRequestSchema
 from server.security.password import pwd_generator
+from server.security.token import generate_account_validation_token
 from server.services.exceptions import (
     EntityAlreadyExists,
     EntityDoesNotExist,
@@ -110,3 +112,27 @@ class AccountCRUD(SQLBase):
         if db_phone_number:
             raise EntityAlreadyExists(f"the username `{phone_number}` is already taken!")  # type: ignore
         return True
+
+
+class AccountValidationCRUD(SQLBase):
+    async def create_account_validation(self, account_id: int) -> AccountValidation:
+        try:
+            validation_key = generate_account_validation_token()
+            new_record = AccountValidation(account_id=account_id, validation_key=validation_key)
+            self.session.add(new_record)
+            await self.session.commit()
+            await self.session.refresh(instance=new_record)
+            return new_record
+        except IntegrityError:
+            self.session.rollback()
+            old_record = self.fetch_account_validation(account_id=account_id)
+            return old_record
+
+    async def fetch_account_validation(self, account_id: int) -> AccountValidation:
+        stmt = select(AccountValidation).where(AccountValidation.account_id == account_id)
+        query = await self.session.execute(statement=stmt)
+
+        if not query:
+            raise EntityDoesNotExist(f"no record with account_id `{account_id}` found!")
+
+        return query.scalar()  # type: ignore
