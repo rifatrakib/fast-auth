@@ -2,8 +2,7 @@ from typing import Union
 
 from pydantic import EmailStr
 
-from server.schemas.base import BaseSchemaAPI
-from server.schemas.token import AccountToken
+from server.schemas.base import BaseSchemaAPI, BaseSchemaAuthAPI
 
 
 class AccountPostRequestSchema(BaseSchemaAPI):
@@ -16,9 +15,13 @@ class SignupRequestSchema(AccountPostRequestSchema):
     phone_number: Union[str, None] = None
 
 
-class SignupResponseSchema(BaseSchemaAPI):
-    id: int
-    authentication_token: AccountToken
+class MessageResponseSchema(BaseSchemaAuthAPI):
+    msg: str
+
+
+class AuthResponseSchema(BaseSchemaAuthAPI):
+    token_type: str
+    access_token: str
 
 
 class LoginRequestSchema(AccountPostRequestSchema):
