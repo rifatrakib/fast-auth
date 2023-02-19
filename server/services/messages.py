@@ -42,3 +42,17 @@ async def http_exc_403_forbidden_request() -> Exception:
         status_code=status.HTTP_400_BAD_REQUEST,
         detail={"msg": "Refused access to the requested resource!"},
     )
+
+
+async def http_exc_404_not_found() -> Exception:
+    return HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail={"msg": "Requested resource does not exist!"},
+    )
+
+
+async def http_exc_404_key_expired() -> Exception:
+    return HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail={"msg": "Provided key has expired! Please validate before expiration."},
+    )
