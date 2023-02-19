@@ -1,6 +1,7 @@
+from datetime import datetime, timedelta
 from typing import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 
 from server.models.user import Account, AccountValidation
@@ -125,7 +126,7 @@ class AccountValidationCRUD(SQLBase):
             return new_record
         except IntegrityError:
             self.session.rollback()
-            old_record = self.fetch_account_validation(account_id=account_id)
+            old_record = await self.fetch_account_validation(account_id=account_id)
             return old_record
 
     async def fetch_account_validation(self, account_id: int) -> AccountValidation:
@@ -136,3 +137,20 @@ class AccountValidationCRUD(SQLBase):
             raise EntityDoesNotExist(f"no record with account_id `{account_id}` found!")
 
         return query.scalar()  # type: ignore
+
+    async def delete_account_validation(self, validation_key: str) -> AccountValidation:
+        stmt = select(AccountValidation).where(
+            AccountValidation.validation_key == validation_key,
+            AccountValidation.created_at > datetime.now() - timedelta(minutes=5),
+        )
+        query = await self.session.execute(statement=stmt)
+        account = query.scalar()
+
+        if not account:
+            raise EntityDoesNotExist(f"no record with validation_key `{validation_key}` found!")
+
+        stmt = delete(AccountValidation).where(AccountValidation.id == account.id)
+        await self.session.execute(statement=stmt)
+        await self.session.commit()
+
+        return account
