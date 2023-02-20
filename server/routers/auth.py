@@ -22,9 +22,10 @@ from server.services.messages import (
     http_exc_400_inactive_user,
     http_exc_404_key_expired,
 )
+from server.services.validators import Tags
 from server.sql.user import AccountCRUD, AccountValidationCRUD
 
-router = APIRouter(prefix="/auth", tags=["Authentication"])
+router = APIRouter(prefix="/auth", tags=[Tags.authentication])
 
 
 @router.post(

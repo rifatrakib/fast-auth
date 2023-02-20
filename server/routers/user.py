@@ -1,6 +1,8 @@
 from fastapi import APIRouter
 
-router = APIRouter(prefix="/users", tags=["Users"])
+from server.services.validators import Tags
+
+router = APIRouter(prefix="/users", tags=[Tags.users])
 
 
 @router.get("/{id}")
