@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Sequence
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.exc import IntegrityError
 
 from server.models.user import Account, AccountValidation
@@ -113,6 +113,28 @@ class AccountCRUD(SQLBase):
         if db_phone_number:
             raise EntityAlreadyExists(f"the username `{phone_number}` is already taken!")  # type: ignore
         return True
+
+    async def activate_account(self, account_id: int) -> Account:
+        select_stmt = select(Account).where(Account.id == account_id)
+        query = await self.session.execute(statement=select_stmt)
+        update_account = query.scalar()
+
+        if not update_account:
+            raise EntityDoesNotExist(f"account with id `{account_id}` does not exist!")  # type: ignore
+
+        update_stmt = (
+            update(Account)
+            .where(Account.id == update_account.id)
+            .values(
+                is_active=True,
+                updated_at=func.now(),
+            )
+        )
+        await self.session.execute(statement=update_stmt)
+        await self.session.commit()
+        await self.session.refresh(instance=update_account)
+
+        return update_account
 
 
 class AccountValidationCRUD(SQLBase):
