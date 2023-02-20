@@ -1,9 +1,10 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from server.schemas.account import (
     AuthResponseSchema,
     LoginRequestSchema,
+    MessageResponseSchema,
     SignupRequestSchema,
 )
 from server.security.dependencies import generate_crud_instance
@@ -20,7 +21,7 @@ from server.services.messages import (
     http_exc_400_credentials_bad_signup_request,
     http_exc_400_inactive_user,
 )
-from server.sql.user import AccountCRUD
+from server.sql.user import AccountCRUD, AccountValidationCRUD
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -29,13 +30,15 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
     "/signup",
     name="auth:signup",
     summary="Create new user",
-    response_model=AuthResponseSchema,
+    response_model=MessageResponseSchema,
     status_code=status.HTTP_201_CREATED,
 )
 async def register_user(
+    request: Request,
     payload: SignupRequestSchema,
     task: BackgroundTasks,
     account: AccountCRUD = Depends(generate_crud_instance(name=AccountCRUD)),
+    validator: AccountValidationCRUD = Depends(generate_crud_instance(name=AccountValidationCRUD)),
 ):
     try:
         await account.is_username_available(username=payload.username)
@@ -44,10 +47,9 @@ async def register_user(
         raise await http_exc_400_credentials_bad_signup_request()
 
     new_user = await account.create_account(data=payload)
-    task.add_task(send_email, email=new_user.email)
-    access_token = jwt_generator.generate_access_token(account=new_user)
+    task.add_task(send_email, request=request, account=new_user, validator=validator)
 
-    return AuthResponseSchema(token_type="Bearer", access_token=access_token)
+    return MessageResponseSchema(msg="Please check your email to activate your account")
 
 
 @router.post(
