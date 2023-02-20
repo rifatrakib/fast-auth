@@ -1,6 +1,11 @@
+from fastapi import Request
+from fastapi.templating import Jinja2Templates
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 
 from server.core.config import settings
+from server.models.user import Account, AccountValidation
+
+templates = Jinja2Templates(directory="server/templates")
 
 
 def get_mail_config():
@@ -18,15 +23,25 @@ def get_mail_config():
     return conf
 
 
-async def send_email(email):
-    html = """
-    <p>Activate your account</p>
-    """
+async def send_email(request: Request, account: Account, validator: AccountValidation):
+    account_validator = await validator.create_account_validation(account.id)
+    validation_key = account_validator.validation_key
+    url = f"{settings.ACTIVATION_URL}/{validation_key}"
+    template = templates.TemplateResponse(
+        "account-activation.html",
+        {
+            "request": request,
+            "subject": f"Verification email for {settings.APP_NAME}",
+            "url": url,
+            "username": account.username,
+        },
+    )
+    html = template.body.decode("utf-8")
     message = MessageSchema(
-        subject="Fastapi-Mail module",
-        recipients=[email],
+        subject=f"{settings.APP_NAME} account activation",
+        recipients=[account.email],
         body=html,
         subtype=MessageType.html,
     )
-    fm = FastMail(get_mail_config())
-    await fm.send_message(message)
+    mailing_agent = FastMail(get_mail_config())
+    await mailing_agent.send_message(message)
