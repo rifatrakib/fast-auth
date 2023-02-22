@@ -1,11 +1,12 @@
 from enum import Enum
 
 
-class Gender(Enum):
+class Gender(str, Enum):
     male = "m"
     female = "f"
 
 
-class Tags(Enum):
+class Tags(str, Enum):
     authentication = "Authentication"
     users = "Users"
+    server_health = "Health"
