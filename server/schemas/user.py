@@ -3,14 +3,7 @@ from pydantic import Field
 from server.schemas.base import BaseSchemaAPI
 
 
-class UpdateUserBase(BaseSchemaAPI):
-    id: int = Field(
-        title="user ID",
-        decription="Unique ID that can be used to distinguish between users.",
-    )
-
-
-class UpdateUserPassword(UpdateUserBase):
+class UpdateUserPassword(BaseSchemaAPI):
     password: str = Field(
         title="password",
         decription="""
