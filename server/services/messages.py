@@ -31,7 +31,7 @@ async def http_exc_400_unverified_user() -> Exception:
 
 async def http_exc_403_credentials_exception() -> Exception:
     return HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
+        status_code=status.HTTP_403_FORBIDDEN,
         detail={"msg": "Refused access to the requested resource!"},
         headers={"WWW-Authenticate": "Bearer"},
     )
@@ -39,7 +39,7 @@ async def http_exc_403_credentials_exception() -> Exception:
 
 async def http_exc_403_forbidden_request() -> Exception:
     return HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
+        status_code=status.HTTP_403_FORBIDDEN,
         detail={"msg": "Refused access to the requested resource!"},
     )
 
