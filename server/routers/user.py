@@ -3,7 +3,11 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Path, status
 from server.models.user import Account
 from server.schemas.account import MessageResponseSchema
 from server.schemas.user import UserInformationResponse
-from server.security.dependencies import generate_crud_instance, get_current_active_user
+from server.security.dependencies import (
+    generate_crud_instance,
+    get_current_active_user,
+    new_password_form,
+)
 from server.services.exceptions import EntityDoesNotExist
 from server.services.messages import http_exc_404_not_found
 from server.services.validators import Tags
@@ -29,7 +33,6 @@ async def read_user_by_id(
 ):
     try:
         user = await account.read_account_by_id(user_id)
-        print(f"{user = }")
         return user
     except EntityDoesNotExist:
         raise await http_exc_404_not_found()
@@ -44,29 +47,8 @@ async def read_user_by_id(
 )
 async def update_user_password(
     current_password: str = Form(
+        alias="currentPassword",
         title="current password",
-        decription="""
-            Password containing at least 1 uppercase letter, 1 lowercase letter,
-            1 number, 1 character that is neither letter nor number, and
-            between 8 to 32 characters.
-        """,
-        regex=r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,64}$",
-        min_length=8,
-        max_length=64,
-    ),
-    new_password: str = Form(
-        title="new password",
-        decription="""
-            Password containing at least 1 uppercase letter, 1 lowercase letter,
-            1 number, 1 character that is neither letter nor number, and
-            between 8 to 32 characters.
-        """,
-        regex=r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,64}$",
-        min_length=8,
-        max_length=64,
-    ),
-    repeat_new_password: str = Form(
-        title="repeat new password",
         decription="""
             Password containing at least 1 uppercase letter, 1 lowercase letter,
             1 number, 1 character that is neither letter nor number, and
@@ -78,7 +60,10 @@ async def update_user_password(
     ),
     account: AccountCRUD = Depends(generate_crud_instance(name=AccountCRUD)),
     current_user: Account = Depends(get_current_active_user),
+    new_passwords=Depends(new_password_form),
 ):
+    new_password = new_passwords["new_password"]
+    repeat_new_password = new_passwords["repeat_new_password"]
     if new_password != repeat_new_password:
         raise HTTPException(
             status_code=status.HTTP_412_PRECONDITION_FAILED,
