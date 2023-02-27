@@ -1,17 +1,38 @@
-from fastapi import APIRouter, Depends, Form, HTTPException, status
+from fastapi import APIRouter, Depends, Form, HTTPException, Path, status
 
 from server.models.user import Account
 from server.schemas.account import MessageResponseSchema
+from server.schemas.user import UserInformationResponse
 from server.security.dependencies import generate_crud_instance, get_current_active_user
+from server.services.exceptions import EntityDoesNotExist
+from server.services.messages import http_exc_404_not_found
 from server.services.validators import Tags
 from server.sql.user import AccountCRUD
 
 router = APIRouter(prefix="/users", tags=[Tags.users])
 
 
-@router.get("/{id}")
-async def read_user_by_id(id: int):
-    return {"id": id}
+@router.get(
+    "/{user_id}",
+    name="user:info",
+    summary="Fetch information about an active or non active user",
+    response_model=UserInformationResponse,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(get_current_active_user)],
+)
+async def read_user_by_id(
+    user_id: int = Path(
+        title="user ID",
+        decription="Unique ID that can be used to distinguish between users.",
+    ),
+    account: AccountCRUD = Depends(generate_crud_instance(name=AccountCRUD)),
+):
+    try:
+        user = await account.read_account_by_id(user_id)
+        print(f"{user = }")
+        return user
+    except EntityDoesNotExist:
+        raise await http_exc_404_not_found()
 
 
 @router.patch(

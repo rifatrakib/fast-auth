@@ -44,7 +44,7 @@ class AccountCRUD(SQLBase):
         stmt = select(Account).where(Account.id == id)
         query = await self.session.execute(statement=stmt)
 
-        if not query:
+        if not query.scalar():
             raise EntityDoesNotExist(f"account with id `{id}` does not exist!")
 
         return query.scalar()  # type: ignore
