@@ -12,7 +12,7 @@ from server.security.dependencies import (
 )
 from server.services.email import send_email
 from server.services.exceptions import EntityDoesNotExist
-from server.services.messages import http_exc_404_not_found
+from server.services.messages import http_exc_404_key_expired, http_exc_404_not_found
 from server.services.validators import Tags
 from server.sql.user import AccountCRUD, AccountValidationCRUD
 
@@ -63,7 +63,7 @@ async def update_user_password(
     ),
     account: AccountCRUD = Depends(generate_crud_instance(name=AccountCRUD)),
     current_user: Account = Depends(get_current_active_user),
-    new_password=Depends(new_password_form),
+    new_password: str = Depends(new_password_form),
 ):
     await account.update_password(
         account_id=current_user.id,
@@ -103,3 +103,27 @@ async def forgot_user_password(
         return MessageResponseSchema(msg="Please check your email for resetting password")
     except EntityDoesNotExist:
         raise await http_exc_404_not_found()
+
+
+@router.patch(
+    "/password/reset/{validation_key}",
+    name="user:reset-password",
+    summary="Use secret key sent in mail to verify and reset password",
+    response_model=MessageResponseSchema,
+    status_code=status.HTTP_200_OK,
+)
+async def reset_user_password(
+    validation_key: str,
+    new_password: str = Depends(new_password_form),
+    account: AccountCRUD = Depends(generate_crud_instance(name=AccountCRUD)),
+    validator: AccountValidationCRUD = Depends(generate_crud_instance(name=AccountValidationCRUD)),
+):
+    try:
+        deleted_record = await validator.delete_account_validation(validation_key=validation_key)
+        await account.reset_password(
+            account_id=deleted_record.account_id,
+            new_password=new_password,
+        )
+        return MessageResponseSchema(msg="Password was reset successfully!")
+    except EntityDoesNotExist:
+        raise await http_exc_404_key_expired()

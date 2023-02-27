@@ -181,6 +181,36 @@ class AccountCRUD(SQLBase):
 
         return update_account  # type: ignore
 
+    async def reset_password(self, account_id: int, new_password: str) -> Account:
+        select_stmt = select(Account).where(Account.id == account_id)
+        query = await self.session.execute(statement=select_stmt)
+        update_account = query.scalar()
+
+        if not update_account:
+            raise EntityDoesNotExist(f"Account with id `{id}` does not exist!")  # type: ignore
+
+        updated_hash_salt = pwd_generator.generate_salt
+        updated_hashed_password = pwd_generator.generate_hashed_password(
+            hash_salt=updated_hash_salt,
+            password=new_password,
+        )
+
+        update_stmt = (
+            update(Account)
+            .where(Account.id == update_account.id)
+            .values(
+                updated_at=func.now(),
+                hash_salt=updated_hash_salt,
+                hashed_password=updated_hashed_password,
+            )
+        )
+
+        await self.session.execute(statement=update_stmt)
+        await self.session.commit()
+        await self.session.refresh(instance=update_account)
+
+        return update_account  # type: ignore
+
 
 class AccountValidationCRUD(SQLBase):
     async def create_account_validation(self, account_id: int) -> AccountValidation:
