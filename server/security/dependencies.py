@@ -1,6 +1,6 @@
 from typing import Callable, Type
 
-from fastapi import Depends, Form
+from fastapi import Depends, Form, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -92,4 +92,9 @@ def new_password_form(
         max_length=64,
     ),
 ):
-    return {"new_password": new_password, "repeat_new_password": repeat_new_password}
+    if new_password != repeat_new_password:
+        raise HTTPException(
+            status_code=status.HTTP_412_PRECONDITION_FAILED,
+            detail={"msg": "New passwords does not match!"},
+        )
+    return new_password

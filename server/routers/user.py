@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Form, HTTPException, Path, status
+from fastapi import APIRouter, Depends, Form, Path, status
 
 from server.models.user import Account
 from server.schemas.account import MessageResponseSchema
@@ -60,16 +60,8 @@ async def update_user_password(
     ),
     account: AccountCRUD = Depends(generate_crud_instance(name=AccountCRUD)),
     current_user: Account = Depends(get_current_active_user),
-    new_passwords=Depends(new_password_form),
+    new_password=Depends(new_password_form),
 ):
-    new_password = new_passwords["new_password"]
-    repeat_new_password = new_passwords["repeat_new_password"]
-    if new_password != repeat_new_password:
-        raise HTTPException(
-            status_code=status.HTTP_412_PRECONDITION_FAILED,
-            detail={"msg": "New passwords does not match!"},
-        )
-
     await account.update_password(
         account_id=current_user.id,
         current_password=current_password,
