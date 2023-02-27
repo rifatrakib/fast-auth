@@ -43,29 +43,32 @@ class AccountCRUD(SQLBase):
     async def read_account_by_id(self, id: int) -> Account:
         stmt = select(Account).where(Account.id == id)
         query = await self.session.execute(statement=stmt)
+        account = query.scalar()
 
-        if not query.scalar():
+        if not account:
             raise EntityDoesNotExist(f"account with id `{id}` does not exist!")
 
-        return query.scalar()  # type: ignore
+        return account  # type: ignore
 
     async def read_account_by_username(self, username: str) -> Account:
         stmt = select(Account).where(Account.username == username)
         query = await self.session.execute(statement=stmt)
+        account = query.scalar()
 
-        if not query:
+        if not account:
             raise EntityDoesNotExist(f"account with username `{username}` does not exist!")
 
-        return query.scalar()  # type: ignore
+        return account  # type: ignore
 
     async def read_account_by_email(self, email: str) -> Account:
         stmt = select(Account).where(Account.email == email)
         query = await self.session.execute(statement=stmt)
+        account = query.scalar()
 
-        if not query:
+        if not account:
             raise EntityDoesNotExist(f"account with email `{email}` does not exist!")
 
-        return query.scalar()  # type: ignore
+        return account  # type: ignore
 
     async def authenticate_user(self, data: LoginRequestSchema) -> Account:
         stmt = select(Account).where(Account.username == data.username)
@@ -196,11 +199,12 @@ class AccountValidationCRUD(SQLBase):
     async def fetch_account_validation(self, account_id: int) -> AccountValidation:
         stmt = select(AccountValidation).where(AccountValidation.account_id == account_id)
         query = await self.session.execute(statement=stmt)
+        record = query.scalar()
 
-        if not query:
+        if not record:
             raise EntityDoesNotExist(f"no record with account_id `{account_id}` found!")
 
-        return query.scalar()  # type: ignore
+        return record  # type: ignore
 
     async def delete_account_validation(self, validation_key: str) -> AccountValidation:
         stmt = select(AccountValidation).where(
