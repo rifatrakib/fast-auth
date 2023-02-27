@@ -13,7 +13,7 @@ from server.security.dependencies import (
 from server.services.email import send_email
 from server.services.exceptions import EntityDoesNotExist
 from server.services.messages import http_exc_404_key_expired, http_exc_404_not_found
-from server.services.validators import Tags
+from server.services.validators import EmailTemplates, Tags
 from server.sql.user import AccountCRUD, AccountValidationCRUD
 
 router = APIRouter(prefix="/users", tags=[Tags.users])
@@ -97,8 +97,8 @@ async def forgot_user_password(
             request=request,
             account=user,
             validator=validator,
-            template_name="password-reset",
             base_url=settings.PASSWORD_RESET_URL,
+            template_name=EmailTemplates.password_reset,
         )
         return MessageResponseSchema(msg="Please check your email for resetting password")
     except EntityDoesNotExist:
@@ -110,7 +110,7 @@ async def forgot_user_password(
     name="user:reset-password",
     summary="Use secret key sent in mail to verify and reset password",
     response_model=MessageResponseSchema,
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_202_ACCEPTED,
 )
 async def reset_user_password(
     validation_key: str,

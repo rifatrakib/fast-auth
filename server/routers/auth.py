@@ -23,7 +23,7 @@ from server.services.messages import (
     http_exc_400_inactive_user,
     http_exc_404_key_expired,
 )
-from server.services.validators import Tags
+from server.services.validators import EmailTemplates, Tags
 from server.sql.user import AccountCRUD, AccountValidationCRUD
 
 router = APIRouter(prefix="/auth", tags=[Tags.authentication])
@@ -56,7 +56,7 @@ async def register_user(
         account=new_user,
         validator=validator,
         base_url=settings.ACTIVATION_URL,
-        template_name="account-activation",
+        template_name=EmailTemplates.account_activation,
     )
 
     return MessageResponseSchema(msg="Please check your email to activate your account")
