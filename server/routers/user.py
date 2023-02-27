@@ -1,5 +1,7 @@
-from fastapi import APIRouter, Depends, Form, Path, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, Path, Request, status
+from pydantic import EmailStr
 
+from server.core.config import settings
 from server.models.user import Account
 from server.schemas.account import MessageResponseSchema
 from server.schemas.user import UserInformationResponse
@@ -8,10 +10,11 @@ from server.security.dependencies import (
     get_current_active_user,
     new_password_form,
 )
+from server.services.email import send_email
 from server.services.exceptions import EntityDoesNotExist
 from server.services.messages import http_exc_404_not_found
 from server.services.validators import Tags
-from server.sql.user import AccountCRUD
+from server.sql.user import AccountCRUD, AccountValidationCRUD
 
 router = APIRouter(prefix="/users", tags=[Tags.users])
 
@@ -68,3 +71,35 @@ async def update_user_password(
         new_password=new_password,
     )
     return MessageResponseSchema(msg="Password updated successfully!")
+
+
+@router.post(
+    "/password/forgot",
+    name="user:forgot-password",
+    summary="Send an email with a secret key to reset password of a user",
+    response_model=MessageResponseSchema,
+    status_code=status.HTTP_200_OK,
+)
+async def forgot_user_password(
+    request: Request,
+    task: BackgroundTasks,
+    email: EmailStr = Form(
+        title="email",
+        decription="Email of the account for which to reset password.",
+    ),
+    account: AccountCRUD = Depends(generate_crud_instance(name=AccountCRUD)),
+    validator: AccountValidationCRUD = Depends(generate_crud_instance(name=AccountValidationCRUD)),
+):
+    try:
+        user = await account.read_account_by_email(email=email)
+        task.add_task(
+            send_email,
+            request=request,
+            account=user,
+            validator=validator,
+            template_name="password-reset",
+            base_url=settings.PASSWORD_RESET_URL,
+        )
+        return MessageResponseSchema(msg="Please check your email for resetting password")
+    except EntityDoesNotExist:
+        raise await http_exc_404_not_found()

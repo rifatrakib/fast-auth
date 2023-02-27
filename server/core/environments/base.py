@@ -42,6 +42,7 @@ class BaseConfig(BaseSettings):
     # random generator config
     RANDOM_BYTE_LENGTH: int
     ACTIVATION_URL: HttpUrl
+    PASSWORD_RESET_URL: HttpUrl
 
     class Config:
         env_file = ".env"
