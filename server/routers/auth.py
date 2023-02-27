@@ -1,6 +1,7 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 
+from server.core.config import settings
 from server.schemas.account import (
     AuthResponseSchema,
     LoginRequestSchema,
@@ -49,7 +50,14 @@ async def register_user(
         raise await http_exc_400_credentials_bad_signup_request()
 
     new_user = await account.create_account(data=payload)
-    task.add_task(send_email, request=request, account=new_user, validator=validator)
+    task.add_task(
+        send_email,
+        request=request,
+        account=new_user,
+        validator=validator,
+        base_url=settings.ACTIVATION_URL,
+        template_name="account-activation",
+    )
 
     return MessageResponseSchema(msg="Please check your email to activate your account")
 

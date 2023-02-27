@@ -1,6 +1,7 @@
 from fastapi import Request
 from fastapi.templating import Jinja2Templates
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
+from pydantic import HttpUrl
 
 from server.core.config import settings
 from server.models.user import Account, AccountValidation
@@ -23,12 +24,18 @@ def get_mail_config():
     return conf
 
 
-async def send_email(request: Request, account: Account, validator: AccountValidation):
+async def send_email(
+    request: Request,
+    account: Account,
+    validator: AccountValidation,
+    template_name: str,
+    base_url: HttpUrl,
+):
     account_validator = await validator.create_account_validation(account.id)
     validation_key = account_validator.validation_key
-    url = f"{settings.ACTIVATION_URL}/{validation_key}"
+    url = f"{base_url}/{validation_key}"
     template = templates.TemplateResponse(
-        "account-activation.html",
+        f"{template_name}.html",
         {
             "request": request,
             "subject": f"Verification email for {settings.APP_NAME}",
