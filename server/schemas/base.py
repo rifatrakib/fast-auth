@@ -29,3 +29,9 @@ class BaseSchemaAuthAPI(BaseModel):
     class Config:
         extra = Extra.forbid
         allow_population_by_field_name: bool = True
+
+
+class HealthResponse(BaseSchemaAPI):
+    APP_NAME: str
+    MODE: str
+    DEBUG: bool
