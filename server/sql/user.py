@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
 from typing import Sequence
 
+from pydantic import EmailStr
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.exc import IntegrityError
 
 from server.models.user import Account, AccountValidation
-from server.schemas.account import LoginRequestSchema, SignupRequestSchema
 from server.security.password import pwd_generator
 from server.security.token import generate_account_validation_token
 from server.services.exceptions import (
@@ -18,16 +18,22 @@ from server.sql.base import SQLBase
 
 
 class AccountCRUD(SQLBase):
-    async def create_account(self, data: SignupRequestSchema) -> Account:
+    async def create_account(
+        self,
+        username: str,
+        email: EmailStr,
+        phone_number: str,
+        password: str,
+    ) -> Account:
         new_account = Account(
-            username=data.username,
-            email=data.email,
-            phone_number=data.phone_number,
+            username=username,
+            email=email,
+            phone_number=phone_number,
         )
         new_account.hash_salt = pwd_generator.generate_salt
         new_account.hashed_password = pwd_generator.generate_hashed_password(
             hash_salt=new_account.hash_salt,
-            password=data.password,
+            password=password,
         )
 
         self.session.add(new_account)
@@ -70,8 +76,8 @@ class AccountCRUD(SQLBase):
 
         return account  # type: ignore
 
-    async def authenticate_user(self, data: LoginRequestSchema) -> Account:
-        stmt = select(Account).where(Account.username == data.username)
+    async def authenticate_user(self, username: str, password: str) -> Account:
+        stmt = select(Account).where(Account.username == username)
         query = await self.session.execute(statement=stmt)
         account = query.scalar()
 
@@ -83,7 +89,7 @@ class AccountCRUD(SQLBase):
 
         if not pwd_generator.verify_password(
             hash_salt=account.hash_salt,
-            password=data.password,
+            password=password,
             hashed_password=account.hashed_password,
         ):
             raise PasswordDoesNotMatch("wrong username or password!")
