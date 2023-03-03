@@ -102,6 +102,23 @@ def phone_number_form_field(
     return phone_number
 
 
+def password_form_field(
+    password: str = Form(
+        alias="newPassword",
+        title="new password",
+        decription="""
+            Password containing at least 1 uppercase letter, 1 lowercase letter,
+            1 number, 1 character that is neither letter nor number, and
+            between 8 to 32 characters.
+        """,
+        regex=r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,64}$",
+        min_length=8,
+        max_length=64,
+    ),
+):
+    return password
+
+
 async def new_password_form(
     new_password: str = Form(
         alias="newPassword",
