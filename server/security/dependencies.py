@@ -2,6 +2,7 @@ from typing import Callable, Type, Union
 
 from fastapi import Depends, Form
 from fastapi.security import OAuth2PasswordBearer
+from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.database import get_session
@@ -83,7 +84,7 @@ def username_form_field(
 
 
 def email_form_field(
-    email: str = Form(
+    email: EmailStr = Form(
         title="email",
         decription="Unique email that can be used for account activation.",
     ),
@@ -118,9 +119,6 @@ async def new_password_form(
         alias="repeatNewPassword",
         title="repeat new password",
         decription="Type the same pasword again.",
-        regex=r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,64}$",
-        min_length=8,
-        max_length=64,
     ),
 ):
     if new_password != repeat_new_password:
