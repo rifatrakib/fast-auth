@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
-from typing import Sequence
+from typing import Sequence, Union
 
 from pydantic import EmailStr
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.exc import IntegrityError
 
-from server.models.user import Account, AccountValidation
+from server.models.user import Account, AccountValidation, User
 from server.security.password import pwd_generator
 from server.security.token import generate_account_validation_token
 from server.services.exceptions import (
@@ -228,7 +228,7 @@ class AccountValidationCRUD(SQLBase):
             await self.session.refresh(instance=new_record)
             return new_record
         except IntegrityError:
-            self.session.rollback()
+            await self.session.rollback()
             old_record = await self.fetch_account_validation(account_id=account_id)
             return old_record
 
@@ -258,3 +258,35 @@ class AccountValidationCRUD(SQLBase):
         await self.session.commit()
 
         return account
+
+
+class UserCRUD(SQLBase):
+    async def create_user(
+        self,
+        account_id: int,
+        first_name: str,
+        middle_name: Union[str, None],
+        last_name: str,
+        gender: Union[str, None],
+        birthday: Union[datetime, None],
+    ) -> User:
+        stmt = select(User).where(User.account_id == account_id)
+        query = await self.session.execute(statement=stmt)
+        account = query.scalar()
+
+        if account:
+            raise EntityAlreadyExists(f"user with account_id {account_id} already exists")
+
+        new_user = User(
+            account_id=account_id,
+            first_name=first_name,
+            middle_name=middle_name,
+            last_name=last_name,
+            gender=gender,
+            birthday=birthday,
+        )
+
+        self.session.add(new_user)
+        await self.session.commit()
+        await self.session.refresh(instance=new_user)
+        return new_user
