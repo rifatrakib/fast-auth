@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Callable, Type, Union
 
 from fastapi import Depends, Form
@@ -15,7 +16,9 @@ from server.services.messages import (
     http_exc_400_unverified_user,
     http_exc_403_credentials_exception,
     http_exc_412_password_mismatch,
+    http_exc_field_required,
 )
+from server.services.validators import Gender
 from server.sql.base import SQLBase
 from server.sql.user import AccountCRUD
 
@@ -141,3 +144,68 @@ async def new_password_form(
     if new_password != repeat_new_password:
         raise await http_exc_412_password_mismatch()
     return new_password
+
+
+def first_name_form_field(optional: bool):
+    async def _first_name_form_field(
+        first_name: Union[str, None] = Form(
+            default=None,
+            alias="firstName",
+            title="First Name",
+            description="First Name of the user",
+        ),
+    ):
+        if not optional and not first_name:
+            raise await http_exc_field_required("first_name")
+        return first_name
+
+    return _first_name_form_field
+
+
+async def middle_name_form_field(
+    middle_name: Union[str, None] = Form(
+        default=None,
+        alias="middleName",
+        title="Middle Name",
+        description="Middle Name of the user",
+    ),
+):
+    return middle_name
+
+
+def last_name_form_field(optional: bool):
+    async def _last_name_form_field(
+        last_name: Union[str, None] = Form(
+            default=None,
+            alias="lastName",
+            title="Last Name",
+            description="Last Name of the user",
+        ),
+    ):
+        if not optional and not last_name:
+            raise await http_exc_field_required("last_name")
+        return last_name
+
+    return _last_name_form_field
+
+
+def gender_form_field(
+    gender: Union[Gender, None] = Form(
+        default=None,
+        alias="gender",
+        title="Gender",
+        description="Gender of the user",
+    ),
+):
+    return gender
+
+
+def birthday_form_field(
+    birthday: Union[datetime, None] = Form(
+        default=None,
+        alias="birthday",
+        title="Birthday",
+        description="Birthday of the user",
+    ),
+):
+    return birthday
