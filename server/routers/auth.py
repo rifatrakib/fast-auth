@@ -5,9 +5,9 @@ from pydantic import EmailStr
 from server.core.config import settings
 from server.models.user import Account
 from server.schemas.account import (
+    AccountInformationResponse,
     AuthResponseSchema,
     MessageResponseSchema,
-    UserInformationResponse,
 )
 from server.security.dependencies import (
     email_form_field,
@@ -133,7 +133,7 @@ async def activate_account(
     "/{account_id}",
     name="account:info",
     summary="Fetch information about an active or non active user",
-    response_model=UserInformationResponse,
+    response_model=AccountInformationResponse,
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(get_current_active_user)],
 )

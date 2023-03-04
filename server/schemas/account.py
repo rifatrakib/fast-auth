@@ -25,7 +25,7 @@ class AuthResponseSchema(BaseSchemaAuthAPI):
     )
 
 
-class UserInformationResponse(JWTData, BaseSchemaORM):
+class AccountInformationResponse(JWTData, BaseSchemaORM):
     is_active: bool = Field(
         default=False,
         title="active status",
