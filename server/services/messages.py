@@ -63,3 +63,10 @@ async def http_exc_412_password_mismatch() -> Exception:
         status_code=status.HTTP_412_PRECONDITION_FAILED,
         detail={"msg": "Passwords does not match!"},
     )
+
+
+async def http_exc_field_required(field_name: str) -> Exception:
+    return HTTPException(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        detail={"msg": f"{field_name} is required."},
+    )
