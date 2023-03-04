@@ -59,7 +59,7 @@ async def http_exc_404_key_expired() -> Exception:
 
 
 async def http_exc_409_conflict(message: str) -> Exception:
-    raise HTTPException(
+    return HTTPException(
         status_code=status.HTTP_409_CONFLICT,
         detail={"msg": message},
     )

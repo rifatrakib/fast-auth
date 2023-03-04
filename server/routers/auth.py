@@ -42,7 +42,7 @@ router = APIRouter(prefix="/auth", tags=[Tags.authentication])
 @router.post(
     "/signup",
     name="auth:signup",
-    summary="Create new user",
+    summary="Create new account",
     response_model=MessageResponseSchema,
     status_code=status.HTTP_201_CREATED,
 )
