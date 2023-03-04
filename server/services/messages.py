@@ -58,6 +58,13 @@ async def http_exc_404_key_expired() -> Exception:
     )
 
 
+async def http_exc_409_conflict(message: str) -> Exception:
+    raise HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail={"msg": message},
+    )
+
+
 async def http_exc_412_password_mismatch() -> Exception:
     return HTTPException(
         status_code=status.HTTP_412_PRECONDITION_FAILED,
@@ -65,7 +72,7 @@ async def http_exc_412_password_mismatch() -> Exception:
     )
 
 
-async def http_exc_field_required(field_name: str) -> Exception:
+async def http_exc_422_field_required(field_name: str) -> Exception:
     return HTTPException(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         detail={"msg": f"{field_name} is required."},

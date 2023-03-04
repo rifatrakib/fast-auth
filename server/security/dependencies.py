@@ -16,7 +16,7 @@ from server.services.messages import (
     http_exc_400_unverified_user,
     http_exc_403_credentials_exception,
     http_exc_412_password_mismatch,
-    http_exc_field_required,
+    http_exc_422_field_required,
 )
 from server.services.validators import Gender
 from server.sql.base import SQLBase
@@ -156,7 +156,7 @@ def first_name_form_field(optional: bool):
         ),
     ):
         if not optional and not first_name:
-            raise await http_exc_field_required("first_name")
+            raise await http_exc_422_field_required("first_name")
         return first_name
 
     return _first_name_form_field
@@ -183,7 +183,7 @@ def last_name_form_field(optional: bool):
         ),
     ):
         if not optional and not last_name:
-            raise await http_exc_field_required("last_name")
+            raise await http_exc_422_field_required("last_name")
         return last_name
 
     return _last_name_form_field
