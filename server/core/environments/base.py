@@ -1,6 +1,6 @@
 from typing import Union
 
-from pydantic import BaseSettings, EmailStr, HttpUrl
+from pydantic import BaseSettings, EmailStr, HttpUrl, RedisDsn
 
 
 class BaseConfig(BaseSettings):
@@ -13,6 +13,8 @@ class BaseConfig(BaseSettings):
     RDS_USER: str
     RDS_PASS: str
     RDS_NAME: str
+
+    REDIS_URL: RedisDsn
 
     # password hashing config
     PASSWORD_HASH_ALGORITHM: str
