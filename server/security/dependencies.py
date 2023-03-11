@@ -1,11 +1,15 @@
 from datetime import datetime
 from typing import Callable, Type, Union
 
+import aioredis
+from aioredis.client import Redis
 from fastapi import Depends, Form
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from server.cache.base import RedisBase
+from server.core.config import settings
 from server.database import get_session
 from server.models.user import Account
 from server.schemas.token import JWTData
@@ -28,15 +32,32 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/signin")
 def generate_crud_instance(name: Type[SQLBase]) -> Callable[[], SQLBase]:
     def _create_crud_instance(
         session: AsyncSession = Depends(get_session),
-    ) -> SQLBase:
+    ) -> Type[SQLBase]:
         return name(session=session)
 
     return _create_crud_instance
 
 
+async def get_redis_client() -> Redis:
+    try:
+        redis = await aioredis.from_url(settings.REDIS_URL, decode_responses=True)
+        yield redis
+    finally:
+        await redis.close()
+
+
+def generate_redis_client(name: Type[RedisBase]) -> Callable[[], RedisBase]:
+    def _create_redis_client(
+        redis: Redis = Depends(get_redis_client),
+    ) -> RedisBase:
+        return name(redis=redis)
+
+    return _create_redis_client
+
+
 async def decode_user_token(
     token: str = Depends(oauth2_scheme),
-):
+) -> JWTData:
     try:
         user_data: JWTData = jwt_generator.retrieve_token_details(token)
     except ValueError:
