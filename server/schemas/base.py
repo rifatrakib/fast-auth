@@ -18,7 +18,7 @@ class BaseSchemaORM(BaseModel):
         json_encoders: dict = {datetime: format_datetime_into_isoformat}
 
 
-class BaseSchemaAPI(BaseModel):
+class BaseSchemaAPI(BaseSchemaORM):
     class Config:
         extra = Extra.forbid
         allow_population_by_field_name: bool = True
