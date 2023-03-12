@@ -8,6 +8,7 @@ from fastapi.security import OAuth2PasswordBearer
 from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from server.cache.account import AccountRedis
 from server.cache.base import RedisBase
 from server.core.config import settings
 from server.database import get_session
@@ -68,9 +69,12 @@ async def decode_user_token(
 async def get_current_user(
     user_data: JWTData = Depends(decode_user_token),
     account: AccountCRUD = Depends(generate_crud_instance(name=AccountCRUD)),
+    redis: AccountRedis = Depends(generate_redis_client(AccountRedis)),
 ):
     try:
-        user = await account.read_account_by_username(user_data.username)
+        user = await redis.get_account_data(user_data.id)
+        if not user:
+            user = await account.read_account_by_username(user_data.username)
     except EntityDoesNotExist:
         raise await http_exc_403_credentials_exception()
     return user
