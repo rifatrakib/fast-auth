@@ -2,6 +2,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Path, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
 
+from server.cache.account import AccountRedis
 from server.core.config import settings
 from server.models.user import Account
 from server.schemas.account import (
@@ -12,6 +13,7 @@ from server.schemas.account import (
 from server.security.dependencies import (
     email_form_field,
     generate_crud_instance,
+    generate_redis_client,
     get_current_active_user,
     new_password_form,
     password_form_field,
@@ -91,6 +93,7 @@ async def register_user(
 async def signin(
     form_data: OAuth2PasswordRequestForm = Depends(),
     account: AccountCRUD = Depends(generate_crud_instance(name=AccountCRUD)),
+    redis: AccountRedis = Depends(generate_redis_client(AccountRedis)),
 ):
     try:
         user = await account.authenticate_user(
@@ -105,6 +108,7 @@ async def signin(
         raise await http_exc_400_credentials_bad_signin_request()
 
     access_token = jwt_generator.generate_access_token(account=user)
+    await redis.set_account_data(user)
 
     return AuthResponseSchema(token_type="Bearer", access_token=access_token)
 
