@@ -224,6 +224,7 @@ class AccountValidationCRUD(SQLBase):
             validation_key = generate_account_validation_token()
             new_record = AccountValidation(account_id=account_id, validation_key=validation_key)
             self.session.add(new_record)
+            await self.session.flush()
             await self.session.commit()
             await self.session.refresh(instance=new_record)
             return new_record
@@ -290,3 +291,23 @@ class UserCRUD(SQLBase):
         await self.session.commit()
         await self.session.refresh(instance=new_user)
         return new_user
+
+    async def read_user_by_id(self, id: int) -> User:
+        stmt = select(User).where(User.id == id)
+        query = await self.session.execute(statement=stmt)
+        user = query.scalar()
+
+        if not user:
+            raise EntityDoesNotExist(f"user with id `{id}` does not exist!")
+
+        return user  # type: ignore
+
+    async def read_user_by_account_id(self, account_id: int) -> User:
+        stmt = select(User).where(User.account_id == account_id)
+        query = await self.session.execute(statement=stmt)
+        user = query.scalar()
+
+        if not user:
+            raise EntityDoesNotExist(f"user with account_id `{account_id}` does not exist!")
+
+        return user  # type: ignore
