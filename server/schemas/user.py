@@ -11,3 +11,11 @@ class UserResponseSchema(BaseSchemaAPI):
     last_name: str
     gender: Union[Gender, None] = None
     birthday: Union[datetime, None] = None
+
+
+class UserUpdateSchema(BaseSchemaAPI):
+    first_name: Union[str, None] = None
+    middle_name: Union[str, None] = None
+    last_name: Union[str, None] = None
+    gender: Union[Gender, None] = None
+    birthday: Union[datetime, None] = None
