@@ -4,7 +4,7 @@ from typing import Union
 from fastapi import APIRouter, Depends, Path, status
 
 from server.models.user import Account
-from server.schemas.user import UserResponseSchema
+from server.schemas.user import UserResponseSchema, UserUpdateSchema
 from server.security.dependencies import (
     birthday_form_field,
     first_name_form_field,
@@ -98,3 +98,37 @@ async def read_user(
         return user
     except EntityDoesNotExist:
         raise await http_exc_404_not_found()
+
+
+@router.patch(
+    "/",
+    name="user:update-user",
+    summary="Update user",
+    response_model=UserResponseSchema,
+    status_code=status.HTTP_200_OK,
+)
+async def update_user(
+    first_name: Union[str, None] = Depends(first_name_form_field(optional=True)),
+    middle_name: Union[str, None] = Depends(middle_name_form_field),
+    last_name: Union[str, None] = Depends(last_name_form_field(optional=True)),
+    gender: Union[str, None] = Depends(gender_form_field),
+    birthday: Union[datetime, None] = Depends(birthday_form_field),
+    user: UserCRUD = Depends(generate_crud_instance(name=UserCRUD)),
+    current_user: Account = Depends(get_current_active_user),
+):
+    user_data = UserUpdateSchema(
+        first_name=first_name,
+        middle_name=middle_name,
+        last_name=last_name,
+        gender=gender,
+        birthday=birthday,
+    )
+
+    try:
+        updated_user = await user.update_user_by_account_id(
+            account_id=current_user.id,
+            user=user_data,
+        )
+    except EntityDoesNotExist:
+        raise await http_exc_404_not_found()
+    return updated_user
