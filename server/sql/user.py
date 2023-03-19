@@ -6,6 +6,7 @@ from sqlalchemy import delete, func, select, update
 from sqlalchemy.exc import IntegrityError
 
 from server.models.user import Account, AccountValidation, User
+from server.schemas.user import UserUpdateSchema
 from server.security.password import pwd_generator
 from server.security.token import generate_account_validation_token
 from server.services.exceptions import (
@@ -311,3 +312,25 @@ class UserCRUD(SQLBase):
             raise EntityDoesNotExist(f"user with account_id `{account_id}` does not exist!")
 
         return user  # type: ignore
+
+    async def update_user_by_account_id(
+        self,
+        account_id: int,
+        user: UserUpdateSchema,
+    ) -> User:
+        select_stmt = select(User).where(User.account_id == account_id)
+        query = await self.session.execute(statement=select_stmt)
+        update_user = query.scalar()
+
+        if not update_user:
+            raise EntityDoesNotExist(f"user with account_id `{account_id}` does not exist!")
+
+        for field, update_value in user.dict().items():
+            if update_value:
+                setattr(update_user, field, update_value)
+
+        await self.session.flush()
+        await self.session.commit()
+        await self.session.refresh(instance=update_user)
+
+        return update_user  # type: ignore
