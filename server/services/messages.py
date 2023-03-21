@@ -65,10 +65,10 @@ async def http_exc_409_conflict(message: str) -> Exception:
     )
 
 
-async def http_exc_412_password_mismatch() -> Exception:
+async def http_exc_412_value_mismatch(field: str) -> Exception:
     return HTTPException(
         status_code=status.HTTP_412_PRECONDITION_FAILED,
-        detail={"msg": "Passwords does not match!"},
+        detail={"msg": f"{field}s do not match!"},
     )
 
 
