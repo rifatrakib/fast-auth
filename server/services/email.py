@@ -1,7 +1,9 @@
+from typing import Dict
+
 from fastapi import Request
 from fastapi.templating import Jinja2Templates
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
-from pydantic import HttpUrl
+from pydantic import EmailStr, HttpUrl
 
 from server.core.config import settings
 from server.models.user import Account, AccountValidation
@@ -29,26 +31,41 @@ async def send_email(
     account: Account,
     validator: AccountValidation,
     template_name: str,
+    subject: str,
     base_url: HttpUrl,
+    email: EmailStr = None,
+    extras: Dict[str, str] = {},
 ):
     account_validator = await validator.create_account_validation(account.id)
     validation_key = account_validator.validation_key
     url = f"{base_url}/{validation_key}"
+
+    if extras:
+        for key, value in extras.items():
+            url = f"{url}?{key}={value}"
+
     template = templates.TemplateResponse(
         f"{template_name}.html",
         {
             "request": request,
-            "subject": f"Verification email for {settings.APP_NAME}",
+            "subject": subject,
             "url": url,
             "username": account.username,
         },
     )
+
+    if email:
+        recipients = [email]
+    else:
+        recipients = [account.email]
+
     html = template.body.decode("utf-8")
     message = MessageSchema(
-        subject=f"{settings.APP_NAME} account activation",
-        recipients=[account.email],
+        subject=subject,
+        recipients=recipients,
         body=html,
         subtype=MessageType.html,
     )
+
     mailing_agent = FastMail(get_mail_config())
     await mailing_agent.send_message(message)
