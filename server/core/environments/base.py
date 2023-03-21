@@ -45,6 +45,7 @@ class BaseConfig(BaseSettings):
     RANDOM_BYTE_LENGTH: int
     ACTIVATION_URL: HttpUrl
     PASSWORD_RESET_URL: HttpUrl
+    EMAIL_CHANGE_URL: HttpUrl
 
     class Config:
         env_file = ".env"

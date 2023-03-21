@@ -14,4 +14,5 @@ class Tags(str, Enum):
 
 class EmailTemplates(str, Enum):
     account_activation = "account-activation"
+    change_email = "change-email"
     password_reset = "password-reset"  # pragma: allowlist secret
