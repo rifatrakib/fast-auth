@@ -11,6 +11,7 @@ from server.schemas.account import (
     MessageResponseSchema,
 )
 from server.security.dependencies import (
+    change_email_form,
     email_form_field,
     generate_crud_instance,
     generate_redis_client,
@@ -78,6 +79,7 @@ async def register_user(
         validator=validator,
         base_url=settings.ACTIVATION_URL,
         template_name=EmailTemplates.account_activation,
+        subject=f"Account activation for {new_user.username}",
     )
 
     return MessageResponseSchema(msg="Please check your email to activate your account")
@@ -199,6 +201,7 @@ async def forgot_user_password(
             validator=validator,
             base_url=settings.PASSWORD_RESET_URL,
             template_name=EmailTemplates.password_reset,
+            subject=f"Password reset for {user.username}",
         )
         return MessageResponseSchema(msg="Please check your email for resetting password")
     except EntityDoesNotExist:
@@ -227,3 +230,31 @@ async def reset_user_password(
         return MessageResponseSchema(msg="Password was reset successfully!")
     except EntityDoesNotExist:
         raise await http_exc_404_key_expired()
+
+
+@router.post(
+    "/change/email",
+    name="account:change-email",
+    summary="Change email of the current active user",
+    response_model=MessageResponseSchema,
+    status_code=status.HTTP_200_OK,
+)
+async def change_account_email(
+    request: Request,
+    task: BackgroundTasks,
+    new_email: EmailStr = Depends(change_email_form),
+    current_user: Account = Depends(get_current_active_user),
+    validator: AccountValidationCRUD = Depends(generate_crud_instance(name=AccountValidationCRUD)),
+):
+    task.add_task(
+        send_email,
+        request=request,
+        account=current_user,
+        validator=validator,
+        base_url=settings.EMAIL_CHANGE_URL,
+        template_name=EmailTemplates.change_email,
+        email=new_email,
+        subject=f"Change email for {current_user.username}",
+        extras={"new-email": new_email},
+    )
+    return MessageResponseSchema(msg="Please check your email for confirmation!")
