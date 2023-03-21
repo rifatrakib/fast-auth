@@ -15,12 +15,13 @@ from server.database import get_session
 from server.models.user import Account
 from server.schemas.token import JWTData
 from server.security.token import jwt_generator
-from server.services.exceptions import EntityDoesNotExist
+from server.services.exceptions import EntityAlreadyExists, EntityDoesNotExist
 from server.services.messages import (
+    http_exc_400_credentials_bad_signup_request,
     http_exc_400_inactive_user,
     http_exc_400_unverified_user,
     http_exc_403_credentials_exception,
-    http_exc_412_password_mismatch,
+    http_exc_412_value_mismatch,
     http_exc_422_field_required,
 )
 from server.services.validators import Gender
@@ -167,7 +168,7 @@ async def new_password_form(
     ),
 ):
     if new_password != repeat_new_password:
-        raise await http_exc_412_password_mismatch()
+        raise await http_exc_412_value_mismatch(field="Password")
     return new_password
 
 
@@ -234,3 +235,27 @@ def birthday_form_field(
     ),
 ):
     return birthday
+
+
+async def change_email_form(
+    new_email: EmailStr = Form(
+        alias="newEmail",
+        title="new email",
+        decription="New email for the current user",
+    ),
+    repeat_new_email: EmailStr = Form(
+        alias="repeatNewEmail",
+        title="repeat new email",
+        decription="Type the same email again.",
+    ),
+    account: AccountCRUD = Depends(generate_crud_instance(name=AccountCRUD)),
+):
+    if new_email != repeat_new_email:
+        raise await http_exc_412_value_mismatch(field="Email")
+
+    try:
+        await account.is_email_available(email=new_email)
+    except EntityAlreadyExists:
+        raise await http_exc_400_credentials_bad_signup_request()
+
+    return new_email
