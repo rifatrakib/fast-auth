@@ -1,4 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, Path, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Path, Query, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
 
@@ -258,3 +258,27 @@ async def change_account_email(
         extras={"new-email": new_email},
     )
     return MessageResponseSchema(msg="Please check your email for confirmation!")
+
+
+@router.get(
+    "/change-email/{validation_key}",
+    name="account:change-email",
+    summary="Change email verification",
+    response_model=MessageResponseSchema,
+    status_code=status.HTTP_200_OK,
+)
+async def update_account_email(
+    validation_key: str = Path(),
+    new_email: EmailStr = Query(alias="new-email"),
+    account: AccountCRUD = Depends(generate_crud_instance(name=AccountCRUD)),
+    validator: AccountValidationCRUD = Depends(generate_crud_instance(name=AccountValidationCRUD)),
+):
+    try:
+        deleted_record = await validator.delete_account_validation(validation_key=validation_key)
+        await account.update_email(
+            account_id=deleted_record.account_id,
+            new_email=new_email,
+        )
+        return MessageResponseSchema(msg="Email was updated successfully!")
+    except EntityDoesNotExist:
+        raise await http_exc_404_key_expired()
