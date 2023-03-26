@@ -6,7 +6,8 @@ from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 from pydantic import EmailStr, HttpUrl
 
 from server.core.config import settings
-from server.models.user import Account, AccountValidation
+from server.models.user import Account
+from server.sql.user import AccountValidationCRUD
 
 templates = Jinja2Templates(directory="server/templates")
 
@@ -29,7 +30,7 @@ def get_mail_config():
 async def send_email(
     request: Request,
     account: Account,
-    validator: AccountValidation,
+    validator: AccountValidationCRUD,
     template_name: str,
     subject: str,
     base_url: HttpUrl,
