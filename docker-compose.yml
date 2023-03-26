@@ -1,11 +1,15 @@
-# docker-compose.yml
-version: '3'
+version: "3.9"
+
 services:
-  web:
-    build:
-      context: .
+  fast_auth:
+    container_name: fast-auth
+    build: .
+    working_dir: /server
+    command: uvicorn server.main:app --host 0.0.0.0 --port 8000 --reload
+    env_file:
+      - .env
+    volumes:
+      - .:/server
     ports:
-      - 8000:8000
-    environment:
-      - APP_NAME=${APP_NAME}
-    working_dir: /api
+      - "8000:8000"
+    restart: on-failure

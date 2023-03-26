@@ -1,12 +1,17 @@
-FROM python:3.9-slim
+FROM python:3.9 as requirements-stage
 
-COPY ./server /api/server
-COPY ./requirements.txt /api/requirements.txt
+WORKDIR /tmp
 
-WORKDIR /api
+RUN pip install poetry
+COPY ./pyproject.toml ./poetry.lock* /tmp/
+RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
 
-RUN pip3 install -r requirements.txt
+FROM python:3.9
 
-EXPOSE 8000
+WORKDIR /code
 
-CMD ["uvicorn", "server.main:app", "--host=0.0.0.0", "--reload"]
+COPY --from=requirements-stage /tmp/requirements.txt /code/requirements.txt
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+COPY ./server /code/server
+
+CMD ["uvicorn", "server.main:app", "--host", "0.0.0.0", "--port", "8000"]
