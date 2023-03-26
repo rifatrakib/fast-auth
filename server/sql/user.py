@@ -157,7 +157,7 @@ class AccountCRUD(SQLBase):
         update_account = query.scalar()
 
         if not update_account:
-            raise EntityDoesNotExist(f"Account with id `{id}` does not exist!")  # type: ignore
+            raise EntityDoesNotExist(f"Account with id `{account_id}` does not exist!")  # type: ignore
 
         if not pwd_generator.verify_password(
             hash_salt=update_account.hash_salt,
@@ -181,6 +181,26 @@ class AccountCRUD(SQLBase):
                 hashed_password=updated_hashed_password,
             )
         )
+
+        await self.session.execute(statement=update_stmt)
+        await self.session.commit()
+        await self.session.refresh(instance=update_account)
+
+        return update_account  # type: ignore
+
+    async def update_email(
+        self,
+        account_id: int,
+        new_email: str,
+    ) -> Account:
+        select_stmt = select(Account).where(Account.id == account_id)
+        query = await self.session.execute(statement=select_stmt)
+        update_account = query.scalar()
+
+        if not update_account:
+            raise EntityDoesNotExist(f"Account with id `{account_id}` does not exist!")  # type: ignore
+
+        update_stmt = update(Account).where(Account.id == update_account.id).values(email=new_email)
 
         await self.session.execute(statement=update_stmt)
         await self.session.commit()
